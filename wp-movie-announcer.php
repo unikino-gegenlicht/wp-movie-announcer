@@ -483,7 +483,7 @@ function wpma_publish_discord( array $posts ): void {
 		$title               = ggl_get_localized_title( $post, $enforce_anonymized );
 		$original_title      = ggl_get_title( $post, $enforce_anonymized );
 		$summary             = ggl_get_summary( $post, $enforce_anonymized );
-		$image_url           = ggl_get_feature_image_url( $post, $enforce_anonymized );
+		$image_url           = ggl_get_feature_image_url( $post, force_anonymized: $enforce_anonymized );
 		$url                 = get_post_permalink( $post );
 		$masked_url          = str_replace( "https://", "", $url );
 		$reservations        = ggl_get_event_booking_url( $post );
@@ -522,6 +522,7 @@ function wpma_publish_discord( array $posts ): void {
 
 
 		send_discord_msg:
+		sleep(2);
 		$msg->send();
 	}
 }
