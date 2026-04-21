@@ -1,0 +1,6 @@
+Die kommende Woche ({{ date_week_start }}–{{ date_week_end }}) haben wir für euch {{ screenings|length }} {{ (screenings|length < 2) ? 'Vorstellung' : 'Vorstellungen' }} im Gepäck
+
+{% for screening in screenings %}
+{{ screening.title }}
+{{ screening.start }}
+{%  endfor %}

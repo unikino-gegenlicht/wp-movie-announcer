@@ -1,0 +1,21 @@
+{
+    "name": "unikino-gegenlicht/wp-movie-announcer",
+    "description": "This WordPress plugin enables automatic posts about our program on the Fediverse",
+    "type": "wordpress-plugin",
+    "authors": [
+        {
+            "name": "Jan Eike Suchard",
+            "email": "60288203+dr4hcu5-jan@users.noreply.github.com"
+        }
+    ],
+    "require": {
+        "vazaha-nl/mastodon-api-client": "^2.1",
+        "woeler/phpdiscord": "^4.0",
+        "potibm/phluesky": "^0.6.1"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    }
+}
