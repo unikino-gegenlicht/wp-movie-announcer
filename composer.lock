@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7a78914bb0c4a024f6f448d823f95cc3",
+    "content-hash": "0ce3b4a5c0f85a12243142f4797e5b5d",
     "packages": [
         {
             "name": "carbonphp/carbon-doctrine-types",
@@ -924,6 +924,55 @@
                 }
             ],
             "time": "2026-04-07T09:57:54+00:00"
+        },
+        {
+            "name": "php-channels/discord-webhook",
+            "version": "v1.0.6",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/muriloperosa/discord-webhook.git",
+                "reference": "5440b12c9fb0c0250b7b9f3ec60854cfefb62a14"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/muriloperosa/discord-webhook/zipball/5440b12c9fb0c0250b7b9f3ec60854cfefb62a14",
+                "reference": "5440b12c9fb0c0250b7b9f3ec60854cfefb62a14",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^6.3 || ^7.0",
+                "php": ">=7.2"
+            },
+            "require-dev": {
+                "phpstan/phpstan": "^1.9",
+                "phpunit/phpunit": "^9.6"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "PhpChannels\\DiscordWebhook\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Murilo Perosa",
+                    "email": "perosamurilo@gmail.com"
+                },
+                {
+                    "name": "Fernando Jr",
+                    "email": "jr.fernandodasilva@gmail.com"
+                }
+            ],
+            "description": "Interface for quick and direct communication with Discord channels via Webhook.",
+            "support": {
+                "issues": "https://github.com/muriloperosa/discord-webhook/issues",
+                "source": "https://github.com/muriloperosa/discord-webhook/tree/v1.0.6"
+            },
+            "time": "2024-04-17T18:48:15+00:00"
         },
         {
             "name": "php-http/discovery",

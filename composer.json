@@ -11,7 +11,8 @@
     "require": {
         "vazaha-nl/mastodon-api-client": "^2.1",
         "woeler/phpdiscord": "^4.0",
-        "potibm/phluesky": "^0.6.1"
+        "potibm/phluesky": "^0.6.1",
+        "php-channels/discord-webhook": "^1.0"
     },
     "config": {
         "allow-plugins": {

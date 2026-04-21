@@ -30,5 +30,11 @@ jQuery(function ($) {
     $('#publish_mastodon').on('click', function () {
         doPublish("mastodon");
     })
+    $('#publish_at_proto').on('click', function () {
+        doPublish("at_proto");
+    })
+    $('#publish_discord').on('click', function () {
+        doPublish("discord");
+    })
 })
 
