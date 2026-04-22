@@ -158,3 +158,52 @@ function wpma_get_publishable_posts(): array {
 
 	return $query->posts;
 }
+
+function wpma_get_description_str( WP_Post $post ): string {
+	if ( ! in_array( $post->post_type, [ "movie", "event" ] ) ) {
+		return "";
+	}
+
+	$audioVersion     = get_post_meta( $post->ID, "audio_type", true );
+	$audioLanguage    = get_post_meta( $post->ID, "audio_language", true );
+	$subtitleLanguage = get_post_meta( $post->ID, "subtitle_language", true );
+
+	$presentationTag = "";
+
+	if ( $audioVersion == "original" ) {
+		$presentationTag = match ( $subtitleLanguage ) {
+			"zxx" => "OV",
+			"eng" => "OmeU",
+			default => "OmU"
+		};
+
+		$presentationLong = match ( $subtitleLanguage ) {
+			"zxx" => "{$audioLanguage} Original o. UT",
+			default => "{$audioLanguage} Original mit {$subtitleLanguage} UT"
+		};
+	} else {
+		$presentationTag = match ( $subtitleLanguage ) {
+			"zxx" => "SF",
+			"eng" => "SFmeU",
+			default => "SFmU"
+		};
+
+		$presentationLong = match ( $subtitleLanguage ) {
+			"zxx" => "{$audioLanguage} Synchronfassung o. UT",
+			default => "{$audioLanguage} Synchronfassung mit {$subtitleLanguage} UT"
+		};
+	}
+
+	$ageRating = match ( get_post_meta( $post->ID, "age_rating", true ) ) {
+		- 3, - 2, - 1 => "ohne/unbekannt",
+		default => (int) rwmb_get_value( "age_rating" ),
+	};
+
+	$countries   = rwmb_get_value( "country" );
+	$countryStr  = join( "/", ggl_resolve_country_list( $countries ) );
+	$releaseYear = ggl_get_release_date( $post )->format( "Y" );
+
+	return "{$presentationTag} ($presentationLong) | {$countryStr} {$releaseYear} |  FSK: {$ageRating}";
+
+
+}
