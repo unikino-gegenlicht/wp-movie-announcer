@@ -32,6 +32,7 @@ require_once "src/settings.php";
 require_once "src/wp-hooks.php";
 require_once "src/mastodon.php";
 require_once "src/discord.php";
+require_once "src/atproto.php";
 
 register_activation_hook( __FILE__, "wpma_activate" );
 register_deactivation_hook( __FILE__, "wpma_deactivate" );
