@@ -24,15 +24,15 @@ function wpma_register_settings_page( array $pages ): array {
 		"tabs"        => [
 			"mastodon" => [
 				"label" => __( "Mastodon", "wpma" ),
-				"icon"  => plugin_dir_url( __FILE__ ) . "static/mastodon.svg",
+				"icon"  => WPMA_STATIC_URL . "/mastodon.svg",
 			],
 			"at_proto" => [
 				"label" => __( "AT Proto / Bluesky", "wpma" ),
-				"icon"  => plugin_dir_url( __FILE__ ) . "static/bluesky.svg",
+				"icon"  => WPMA_STATIC_URL . "/bluesky.svg",
 			],
 			"discord"  => [
 				"label" => __( "Discord", "wpma" ),
-				"icon"  => plugin_dir_url( __FILE__ ) . "static/discord.svg",
+				"icon"  => WPMA_STATIC_URL . "/discord.svg",
 			]
 		]
 	);
@@ -108,21 +108,33 @@ function wpma_setttings_meta_boxes( array $meta_boxes ): array {
 		"tab"            => "at_proto",
 		"fields"         => [
 			[
-				"id"   => "atproto_instance_url",
+				"id"   => "at_proto_instance_url",
 				"type" => "url",
+				"std"  => "https://bsky.social/",
 				"name" => __( "AT Proto Instance URL", "wpma" ),
-				"desc" => __( "URL that points to the Bluesky (or AT Proto) instance that the post is going to be published on", "wpma" ),
+				"desc" => __( "The host on which the AT Proto instance the plugin publishes to lives on", "wpma" ),
 			],
 			[
-				"id"   => "atproto_access_token",
+				"id"   => "at_proto_identifier",
 				"type" => "text",
-				"name" => __( "Access Token", "wpma" ),
-				"desc" => __( "Access token that is generated for the account that the post is going to be published on", "wpma" )
+				"name" => __( "AT Proto Identifier", "wpma" ),
+				"desc" => __( "The username that is going to be used to publish the announcements", "wpma" ),
+			],
+			[
+				"id"   => "at_proto_access_token",
+				"type" => "text",
+				"name" => __( "Access Token / App Passwort", "wpma" ),
+				"desc" => __( "Access token or app password that is generated for the account that the post is going to be published on", "wpma" )
 			],
 			[
 				"id"   => "test_at_proto",
 				"type" => "button",
 				"std"  => __( "Test Announcements with this Service", "wpma" ),
+			],
+			[
+				"id"   => "publish_at_proto",
+				"type" => "button",
+				"std"  => __( "Publish Upcoming Announcements with this Service", "wpma" ),
 			]
 		]
 	);

@@ -24,8 +24,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
-
-const WPMA_ATPROTO_MAX_CHAR_COUNT = 300;
+const WPMA_STATIC_DIR = __DIR__ . '/static';
+define('WPMA_STATIC_URL', plugin_dir_url(__FILE__) . '/static');
 
 require_once 'vendor/autoload.php';
 require_once "src/settings.php";
@@ -71,7 +71,7 @@ function wpma_publish_manually(): void {
 				wpma_publish_mastodon( $posts );
 				break;
 			case "at_proto":
-				wpma_publish_atproto( $posts );
+				wpma_publish_at_proto( $posts );
 				break;
 			default:
 				wp_send_json_error( [ "status" => "unknown platform" ] );
@@ -199,7 +199,7 @@ function wpma_get_description_str( WP_Post $post ): string {
 		default => (int) rwmb_get_value( "age_rating" ),
 	};
 
-	$countries   = rwmb_get_value( "country" );
+	$countries   = get_post_meta( $post->ID, "country" );
 	$countryStr  = join( "/", ggl_resolve_country_list( $countries ) );
 	$releaseYear = ggl_get_release_date( $post )->format( "Y" );
 
