@@ -100,7 +100,7 @@ function wpma_publish_mastodon( array $posts ): void {
 
 	$last_post_id = $opener_post->id;
 	foreach ( $screenings as $screening ) {
-		$post_text = "🎬 {$screening['title']}" . ( $screening['title'] !== $screening['original_title'] ? "(OT: {$screening['original_title']})" : "" ) . PHP_EOL;
+		$post_text = "🎬 {$screening['title']} " . ( $screening['title'] !== $screening['original_title'] ? "(OT: {$screening['original_title']})" : "" ) . PHP_EOL;
 		$post_text .= "{$screening['start']}" . PHP_EOL;
 		$post_text .= PHP_EOL;
 
