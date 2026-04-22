@@ -41,7 +41,7 @@ function wpma_test_atproto(): void {
 	wp_send_json_success( [ "cid" => $res->getCid(), "uri" => $res->getUri() ] );
 }
 
-function wpma_publish_atproto( array $posts ): void {
+function wpma_publish_at_proto( array $posts ): void {
 	$base_url = rwmb_meta( "at_proto_instance_url", [ "object_type" => "setting" ], WPMA_OPTION_NAME );
 	if ( mb_trim( $base_url ) === "" ) {
 		throw new ValueError( "No base url set for AT Proto", 1 );
@@ -61,8 +61,7 @@ function wpma_publish_atproto( array $posts ): void {
 	$next_monday = new DateTimeImmutable( "next Monday" );
 	$next_sunday = $next_monday->add( new DateInterval( "P6D" ) );
 
-	$content = "Unser Programm in der KW {$next_monday->format('W')} ({$next_monday->format('d.m.')}–{$next_sunday->format('d.m.')})" . PHP_EOL;
-
+	$content    = "Unser Programm in der KW {$next_monday->format('W')} ({$next_monday->format('d.m.')}–{$next_sunday->format('d.m.')})" . PHP_EOL . PHP_EOL;
 	$screenings = array();
 	foreach ( $posts as $post ) {
 		$enforce_anonymized = ggl_get_licensing_type( $post->ID ) !== "full";
@@ -78,8 +77,6 @@ function wpma_publish_atproto( array $posts ): void {
 		];
 	}
 
-	$content .= PHP_EOL;
-	$content .= PHP_EOL;
 	foreach ( $screenings as $screening ) {
 		$content .= "{$screening['title']}" . PHP_EOL;
 		$content .= "{$screening['start']}" . PHP_EOL;
@@ -87,32 +84,32 @@ function wpma_publish_atproto( array $posts ): void {
 	}
 
 	$content = mb_trim( $content );
-
-	$opener   = Post::create( $content, "de" );
-	$last_uri = $api->createRecord( $opener )->getUri();
+	try {
+		$opener   = Post::create( $content, "de" );
+		$last_uri = $api->createRecord( $opener )->getUri();
+	} catch ( Exception $e ) {
+		wp_send_json_error( $e->getMessage() );
+	}
 
 	foreach ( $screenings as $screening ) {
-		$post = get_post( $screening['id'] );
+		$wp_post   = get_post( $screening['id'] );
 		$post_text = "🎬 {$screening['title']}" . ( $screening['title'] !== $screening['original_title'] ? "(OT: {$screening['original_title']})" : "" ) . PHP_EOL;
 		$post_text .= "{$screening['start']}" . PHP_EOL;
 		$post_text .= PHP_EOL;
 
 		$base_length = strlen( $post_text );
-		$post_closer = PHP_EOL . PHP_EOL . "ℹ️ " . $screening["url"];
 
-
-		$remaining_length = WPMA_ATPROTO_MAX_CHAR_COUNT - $base_length - strlen( $post_closer );
+		$remaining_length = WPMA_ATPROTO_MAX_CHAR_COUNT - $base_length;
 		$summary          = substr_replace( $screening["summary"], "", $remaining_length );
 		$summary          = mb_trim( $summary );
 		$summary          .= str_ends_with( $summary, "." ) ? "" : "…";
 
 		$post_text .= $summary;
-		$post_text .= $post_closer;
 
 		$post = Post::create( $post_text, "de" );
 		$post = $post_service->addFacetsFromLinks( $post );
 		$post = $post_service->addReply( $post, $last_uri );
-		$post = $post_service->addWebsiteCard( $post, $screening["url"], $screening["title"], wpma_get_description_str($post), $screening["image_path"] );
+		$post = $post_service->addWebsiteCard( $post, $screening["url"], $screening["title"], wpma_get_description_str( $wp_post ), $screening["image_path"] );
 
 		$last_uri = $api->createRecord( $post )->getUri();
 	}
