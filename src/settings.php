@@ -130,6 +130,11 @@ function wpma_setttings_meta_boxes( array $meta_boxes ): array {
 				"id"   => "test_at_proto",
 				"type" => "button",
 				"std"  => __( "Test Announcements with this Service", "wpma" ),
+			],
+			[
+				"id"   => "publish_at_proto",
+				"type" => "button",
+				"std"  => __( "Publish Upcoming Announcements with this Service", "wpma" ),
 			]
 		]
 	);
