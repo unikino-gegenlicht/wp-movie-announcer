@@ -13,7 +13,6 @@ use potibm\Bluesky\BlueskyApi;
 use potibm\Bluesky\BlueskyPostService;
 use potibm\Bluesky\Feed\Post;
 
-// FIXME: Remove secret: dthi-noq5-x7d3-uhuy
 
 function wpma_test_atproto(): void {
 	$base_url = rwmb_meta( "at_proto_instance_url", [ "object_type" => "setting" ], WPMA_OPTION_NAME );
