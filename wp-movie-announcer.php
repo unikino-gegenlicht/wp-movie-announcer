@@ -24,8 +24,7 @@
 
 defined( 'ABSPATH' ) || exit;
 
-
-const WPMA_ATPROTO_MAX_CHAR_COUNT = 300;
+const WPMA_STATIC_DIR = __DIR__ . '/static';
 
 require_once 'vendor/autoload.php';
 require_once "src/settings.php";
