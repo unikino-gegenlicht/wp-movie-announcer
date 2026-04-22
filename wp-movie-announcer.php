@@ -22,21 +22,17 @@
  * Update URI: https://github.com/unikino-gegenlicht/wp-studip-announcement-renderer/releases
  */
 
-use PhpChannels\DiscordWebhook\Discord;
-use Vazaha\Mastodon\Exceptions as MastodonExceptions;
-use Vazaha\Mastodon\Factories\ApiClientFactory as MastodonAPIFactory;
-use Vazaha\Mastodon\Helpers as MastodonHelper;
-
-const WPMA_OPTION_NAME = "wpma_settings";
-
-const WPMA_MASTODON_MAX_CHAR_COUNT  = 500;
-const WPMA_MASTODON_LINK_CHAR_COUNT = 23;
+defined( 'ABSPATH' ) || exit;
 
 
 const WPMA_ATPROTO_MAX_CHAR_COUNT = 300;
 
-defined( 'ABSPATH' ) || exit;
 require_once 'vendor/autoload.php';
+require_once "src/settings.php";
+require_once "src/wp-hooks.php";
+require_once "src/mastodon.php";
+require_once "src/discord.php";
+require_once "src/atproto.php";
 
 register_activation_hook( __FILE__, "wpma_activate" );
 register_deactivation_hook( __FILE__, "wpma_deactivate" );
@@ -51,180 +47,14 @@ add_action( "wp_ajax_wpma_test", "wpma_test" );
 add_action( "wp_ajax_wpma_publish_manually", "wpma_publish_manually" );
 add_action( "wpma_publish_screenings", "wpma_publish_screenings" );
 
-/**
- * Activation Hook
- *
- * This function automatically schedules the publishing cycle to the next
- * sunday at 16:00h.
- *
- * @return void
- * @throws Exception
- */
-function wpma_activate() {
-	if ( ! wp_next_scheduled( 'wpma_publish_screenings' ) ) {
-		$tz              = new DateTimeZone( 'Europe/Berlin' );
-		$next_sunday     = new DateTimeImmutable( "next Sunday", $tz );
-		$initial_post_ts = $next_sunday->setTime( 16, 0, 0 )->getTimestamp() + $next_sunday->getOffset();
-		wp_schedule_event( $initial_post_ts, 'weekly', 'wpma_publish_screenings' );
-	}
-}
-
-/**
- * Deactivation Hook
- *
- * This function removes the next scheduled publishing
- *
- * @return void
- */
-function wpma_deactivate() {
-	$next_publish = wp_next_scheduled( 'wpma_publish_screenings' );
-	wp_unschedule_event( $next_publish, 'wpma_publish_screenings' );
-}
 
 function wpma_enqueue_scripts() {
-	wp_enqueue_script( 'wpma-ajax', plugin_dir_url( __FILE__ ) . 'js/ajax.js', [ 'jquery' ], md5_file( plugin_dir_path( __FILE__ ) . "js/ajax.js" ), false );
+	wp_enqueue_script( 'wpma-ajax', plugin_dir_url( __FILE__ ) . 'src/js/ajax.js', [ 'jquery' ], md5_file( plugin_dir_path( __FILE__ ) . "src/js/ajax.js" ), false );
 	wp_localize_script( 'wpma-ajax', 'ajax', [
 		'url'          => admin_url( 'admin-ajax.php' ),
 		'testNonce'    => wp_create_nonce( 'wpma_test' ),
 		'publishNonce' => wp_create_nonce( "wpma_publish_manually" ),
 	] );
-}
-
-function wpma_register_settings_page( array $pages ): array {
-	$pages[] = array(
-		"id"          => "wpma_settings_page",
-		"page_title"  => __( 'Program Announcement Settings', 'wpma' ),
-		"menu_title"  => __( 'Program Announcements', 'wpma' ),
-		"capability"  => "manage_options",
-		"option_name" => WPMA_OPTION_NAME,
-		"icon_url"    => "dashicons-megaphone",
-		"customizer"  => false,
-		"position"    => 900,
-		"style"       => "no-boxes",
-		"tabs"        => [
-			"mastodon" => [
-				"label" => __( "Mastodon", "wpma" ),
-				"icon"  => plugin_dir_url( __FILE__ ) . "static/mastodon.svg",
-			],
-			"at_proto" => [
-				"label" => __( "AT Proto / Bluesky", "wpma" ),
-				"icon"  => plugin_dir_url( __FILE__ ) . "static/bluesky.svg",
-			],
-			"discord"  => [
-				"label" => __( "Discord", "wpma" ),
-				"icon"  => plugin_dir_url( __FILE__ ) . "static/discord.svg",
-			]
-		]
-	);
-
-	return $pages;
-}
-
-/**
- * Add settings meta boxes
- *
- * @param array $meta_boxes All meta boxes that have already been declared
- *
- * @return array The previous meta boxes with the settings meta boxes for this
- *  plugin
- */
-function wpma_setttings_meta_boxes( array $meta_boxes ): array {
-
-	/**
-	 * This adds the Mastodon related settings to the settings page
-	 */
-	$meta_boxes[] = array(
-		"id"             => "wpma_settings_mastodon",
-		"title"          => __( "Mastodon", "wpma" ),
-		"context"        => "normal",
-		"settings_pages" => "wpma_settings_page",
-		"tab"            => "mastodon",
-		"fields"         => [
-			[
-				"id"   => "mastodon_instance_url",
-				"type" => "url",
-				"name" => __( "Mastodon Instance URL", "wpma" ),
-				"desc" => __( "URL that points to the mastodon instance that the post is going to be published on", "wpma" ),
-			],
-			[
-				"id"   => "mastodon_access_token",
-				"type" => "text",
-				"name" => __( "Access Token", "wpma" ),
-				"desc" => __( "Access token that is generated for the account that the post is going to be published on", "wpma" )
-			],
-			[
-				"id"   => "test_mastodon",
-				"type" => "button",
-				"std"  => __( "Test Announcements with this Service", "wpma" ),
-			],
-			[
-				"id"   => "publish_mastodon",
-				"type" => "button",
-				"std"  => __( "Publish Upcoming Announcements with this Service", "wpma" ),
-			]
-		]
-	);
-
-	/**
-	 * This adds the Bluesky related settings to the page
-	 */
-	$meta_boxes[] = array(
-		"id"             => "wpma_settings_atproto",
-		"title"          => __( "Bluesky / AT Proto", "wpma" ),
-		"context"        => "normal",
-		"settings_pages" => "wpma_settings_page",
-		"tab"            => "at_proto",
-		"fields"         => [
-			[
-				"id"   => "atproto_instance_url",
-				"type" => "url",
-				"name" => __( "AT Proto Instance URL", "wpma" ),
-				"desc" => __( "URL that points to the Bluesky (or AT Proto) instance that the post is going to be published on", "wpma" ),
-			],
-			[
-				"id"   => "atproto_access_token",
-				"type" => "text",
-				"name" => __( "Access Token", "wpma" ),
-				"desc" => __( "Access token that is generated for the account that the post is going to be published on", "wpma" )
-			],
-			[
-				"id"   => "test_at_proto",
-				"type" => "button",
-				"std"  => __( "Test Announcements with this Service", "wpma" ),
-			]
-		]
-	);
-
-	/**
-	 * This adds the Discord related settings to the page
-	 */
-	$meta_boxes[] = array(
-		"id"             => "wpma_settings_discord",
-		"title"          => __( "Discord", "wpma" ),
-		"context"        => "normal",
-		"settings_pages" => "wpma_settings_page",
-		"tab"            => "discord",
-		"fields"         => [
-			[
-				"id"   => "discord_webhook_url",
-				"type" => "text",
-				"name" => __( "Webhook URL", "wpma" ),
-				"desc" => __( "The Webhook URL that is used to publish the announcements", "wpma" ),
-			],
-			[
-				"id"   => "test_discord",
-				"type" => "button",
-				"std"  => __( "Test Announcements with this Service", "wpma" ),
-			],
-			[
-				"id"   => "publish_discord",
-				"type" => "button",
-				"std"  => __( "Publish Upcoming Announcements with this Service", "wpma" ),
-			]
-		]
-	);
-
-	return $meta_boxes;
 }
 
 function wpma_publish_manually(): void {
@@ -271,90 +101,6 @@ function wpma_test() {
 	}
 }
 
-/**
- * This function tests creating a post on the mastodon instance
- *
- * @return void
- * @throws ValueError A required setting has not been set
- * @throws MastodonExceptions\InvalidResponseException Mastodon returned an invalid response
- */
-function wpma_test_mastodon(): void {
-	try {
-		$instance_url = rwmb_meta( "mastodon_instance_url", [ "object_type" => "setting" ], WPMA_OPTION_NAME );
-		if ( mb_trim( $instance_url ) === "" ) {
-			throw new ValueError( "No mastodon instance URL set.", 1 );
-		}
-		$access_token = rwmb_meta( "mastodon_access_token", [ "object_type" => "setting" ], WPMA_OPTION_NAME );
-		if ( mb_trim( $access_token ) === "" ) {
-			throw new ValueError( "No mastodon access token set.", 2 );
-		}
-
-		$factory = new MastodonAPIFactory();
-		$client  = $factory->build();
-
-		$client->setBaseUri( $instance_url );
-		$client->setAccessToken( $access_token );
-
-		$full_image_path = dirname( __FILE__ ) . '/static/demo.jpg';
-		$post_image      = $client->methods()->media()->v2( file: new MastodonHelper\UploadFile( $full_image_path ), focus: "(0,0)" );
-
-		$client->methods()->statuses()->create( "This is a test post, to check the configuration of the announcement plugin. This post is only visible to you!", media_ids: [ $post_image->id ], visibility: "direct", language: "de" );
-	} catch ( Exception $e ) {
-		wp_send_json_error( [ "error" => $e->getMessage() ] );
-	}
-
-	wp_send_json_success();
-}
-
-/**
- * This function creates a private test post in the configured Bluesky/ATProto
- * instance
- *
- *
- * @return void
- */
-function wpma_test_atproto(): void {
-	$instance_url = rwmb_meta( "wpma_mastodon_instance_url", [ "object_type" => "setting" ], WPMA_OPTION_NAME );
-	if ( mb_trim( $instance_url ) === "" ) {
-		throw new ValueError( "No mastodon instance URL set.", 1 );
-	}
-	$access_token = rwmb_meta( "mastodon_access_token", [ "object_type" => "setting" ], WPMA_OPTION_NAME );
-	if ( mb_trim( $access_token ) === "" ) {
-		throw new ValueError( "No mastodon access token set.", 2 );
-	}
-}
-
-
-function wpma_test_discord(): void {
-	$webhook_url = rwmb_meta( "discord_webhook_url", [ "object_type" => "setting" ], WPMA_OPTION_NAME );
-	if ( mb_trim( $webhook_url ) === "" ) {
-		throw new ValueError( "No discord webhook URL set.", 3 );
-	}
-
-	$content = "# Testnachricht" . PHP_EOL;
-	$content .= "Aktuelle Kalenderwoche: " . new DateTimeImmutable( "now", new DateTimeZone( "Europe/Berlin" ) )->format( "W" ) . PHP_EOL;
-	$content .= "## Filmtitel 1";
-
-	try {
-		$msg = Discord::message( $webhook_url );
-		$msg->setUsername( "Unikino GEGENLICHT" );
-		$msg->setContent( $content );
-		$msg->setTitle( "Unikino GEGENLICHT" );
-		$msg->setImage( plugin_dir_url( __FILE__ ) . "static/demo.jpg" );
-		$msg->setThumbnail( plugin_dir_url( __FILE__ ) . "static/demo.jpg" );
-		$msg->setDescription( "test" );
-		$msg->setAuthor( wp_get_current_user()->display_name, wp_get_current_user()->user_url, get_avatar_url( wp_get_current_user()->user_email ) );
-		$msg->send();
-	} catch ( Exception $e ) {
-		wp_send_json_error( [ "error" => $e->getMessage() ] );
-	}
-}
-
-/**
- * Publish the screening schedule on the social medias
- *
- * @return void
- */
 function wpma_publish_screenings() {
 	$posts = wpma_get_publishable_posts();
 
@@ -377,155 +123,6 @@ function wpma_publish_screenings() {
 	}
 }
 
-/**
- * @param WP_Post[]|int[] $posts
- *
- * @return void
- */
-function wpma_publish_mastodon( array $posts ): void {
-	$instance_url = rwmb_meta( "mastodon_instance_url", [ "object_type" => "setting" ], WPMA_OPTION_NAME );
-	if ( mb_trim( $instance_url ) === "" ) {
-		throw new ValueError( "No mastodon instance URL set.", 1 );
-	}
-	$access_token = rwmb_meta( "mastodon_access_token", [ "object_type" => "setting" ], WPMA_OPTION_NAME );
-	if ( mb_trim( $access_token ) === "" ) {
-		throw new ValueError( "No mastodon access token set.", 2 );
-	}
-
-	$factory = new MastodonAPIFactory();
-	$client  = $factory->build();
-
-	$client->setBaseUri( $instance_url );
-	$client->setAccessToken( $access_token );
-
-	$screenings = array();
-	foreach ( $posts as $post ) {
-		$enforce_anonymized = ggl_get_licensing_type( $post->ID ) !== "full";
-		$image_path         = ggl_get_feature_image_path( $post->ID, "mobile", $enforce_anonymized );
-		$screenings[]       = [
-			"title"          => ggl_get_localized_title( $post->ID, $enforce_anonymized ),
-			"start"          => ggl_get_starting_time( $post->ID )->format( "d.m.Y \| H:i \U\h\\r" ),
-			"original_title" => ggl_get_title( $post->ID, $enforce_anonymized ),
-			"summary"        => str_replace( "\n", "", mb_trim( strip_tags( nl2br( ggl_get_summary( $post->ID, $enforce_anonymized ) ) ) ) ),
-			"url"            => get_post_permalink( $post->ID ) . "?utm_source=mastodon.social&utm_medium=social&utm_campaign=social-announcements&utm_content=textlink",
-			"reservations"   => ggl_get_event_booking_url( $post->ID ) == "" ? null : ( ggl_get_event_booking_url( $post->ID ) . "?utm_source=mastodon.social&utm_medium=social&utm_campaign=social-announcements&utm_content=textlink" ),
-			"image_path"     => $image_path,
-		];
-	}
-
-	$next_monday = new DateTimeImmutable( "next Monday" );
-	$next_sunday = $next_monday->add( new DateInterval( "P6D" ) );
-	$opener_text = "Für die kommende Woche ({$next_monday->format('d.m.')}–{$next_sunday->format('d.m.')}) haben wir folgendes Programm für euch im Angebot";
-	$opener_text .= PHP_EOL;
-	$opener_text .= PHP_EOL;
-	foreach ( $screenings as $screening ) {
-		$opener_text .= "{$screening['title']}" . PHP_EOL;
-		$opener_text .= "{$screening['start']}" . PHP_EOL;
-		$opener_text .= PHP_EOL;
-	}
-	$opener_text .= "Das gesamte Programm findet ihr wie immer unter https://gegenlicht.net?utm_source=mastodon.social&utm_medium=social&utm_campaign=social-announcements&utm_content=textlink";
-	$opener_post = $client->methods()->statuses()->create( $opener_text, visibility: "direct", language: "de" );
-
-	$last_post_id = $opener_post->id;
-	foreach ( $screenings as $screening ) {
-		$post_text = "🎬 {$screening['title']}" . ( $screening['title'] !== $screening['original_title'] ? "(OT: {$screening['original_title']})" : "" ) . PHP_EOL;
-		$post_text .= "{$screening['start']}" . PHP_EOL;
-		$post_text .= PHP_EOL;
-
-		$base_length = strlen( $post_text );
-
-		if ( isset( $screening['reservations'] ) ) {
-			$post_closer   = "🎟️ " . $screening["reservations"] . PHP_EOL;
-			$post_closer   .= "ℹ️ " . $screening["url"];
-			$closer_length = strlen( $post_closer ) - strlen( $screening["reservations"] ) - strlen( $screening["url"] ) + 2 * WPMA_MASTODON_LINK_CHAR_COUNT;
-		} else {
-			$post_closer   = "ℹ️ " . $screening["url"];
-			$closer_length = strlen( $post_closer ) - strlen( $screening["url"] ) + 1 * WPMA_MASTODON_LINK_CHAR_COUNT;
-		}
-
-		$remaining_length = WPMA_MASTODON_MAX_CHAR_COUNT - $base_length - $closer_length;
-		$summary          = substr_replace( $screening["summary"], "", $remaining_length );
-		$summary          = mb_trim( $summary );
-		$summary          .= str_ends_with( $summary, "." ) ? "" : "…";
-
-		$post_text .= $summary . PHP_EOL;
-		$post_text .= PHP_EOL;
-		$post_text .= $post_closer;
-
-		$img = $client->methods()->media()->v2( new MastodonHelper\UploadFile( $screening["image_path"] ), focus: "(0,0)" );
-
-		$mstdn_post   = $client->methods()->statuses()->create( $post_text, media_ids: [ $img->id ], in_reply_to_id: $last_post_id, visibility: "direct", language: "de" );
-		$last_post_id = $mstdn_post->id;
-	}
-}
-
-
-function wpma_publish_discord( array $posts ): void {
-	$webhook_url = rwmb_meta( "discord_webhook_url", [ "object_type" => "setting" ], WPMA_OPTION_NAME );
-	if ( mb_trim( $webhook_url ) === "" ) {
-		throw new ValueError( "No mastodon instance URL set.", 1 );
-	}
-	$next_monday = new DateTimeImmutable( "next Monday" );
-	$next_sunday = $next_monday->add( new DateInterval( "P6D" ) );
-
-	$content = "# Das Programm in der KW {$next_monday->format('W')} ({$next_monday->format('d.m.')}–{$next_sunday->format('d.m.')})" . PHP_EOL;
-	$content .= "Auch für die KW {$next_monday->format('W')} haben wir euch wieder einige Vorstellungen mitgebracht";
-
-	$msg = Discord::message( $webhook_url );
-	$msg->setUsername( "Unikino GEGENLICHT" );
-	$msg->setAvatarUrl( get_site_icon_url() );
-	$msg->setContent( $content );
-	$msg->send();
-
-	foreach ( $posts as $post ) {
-		$enforce_anonymized = ggl_get_licensing_type( $post->ID ) != "full";
-
-		$title               = ggl_get_localized_title( $post, $enforce_anonymized );
-		$original_title      = ggl_get_title( $post, $enforce_anonymized );
-		$summary             = ggl_get_summary( $post, $enforce_anonymized );
-		$image_url           = ggl_get_feature_image_url( $post, force_anonymized: $enforce_anonymized );
-		$url                 = get_post_permalink( $post );
-		$masked_url          = str_replace( "https://", "", $url );
-		$reservations        = ggl_get_event_booking_url( $post );
-		$masked_reservations = str_replace( "https://", "", $reservations );
-		$proposers           = ggl_get_proposers( $post );
-		$proposer_names      = array_map( function ( $item ) {
-			return ggl_get_title( $item );
-		}, $proposers );
-
-		if ( count( $proposer_names ) == 1 && $proposer_names[0] !== "" ) {
-			$author = array_pop( $proposer_names );
-		} elseif ( count( $proposer_names ) > 1 ) {
-			$last_name = array_pop( $proposer_names );
-			$author    = join( ", ", $proposer_names );
-			$author    .= " und " . $last_name;
-		} else {
-			$author = "uns";
-		}
-
-		$content = mb_trim( "## {$title} " . ( $title !== $original_title ? "(OT: {$original_title})" : "" ) ) . PHP_EOL;
-		$content .= mb_trim( strip_tags( str_replace( "</p>", PHP_EOL . PHP_EOL, $summary ) ) ) . PHP_EOL;
-		$content .= PHP_EOL;
-		$content .= "Und warum der Film aus der Sicht von {$author} für euch sehenswert ist erfahrt ihr unter [{$masked_url}]({$url}?utm_source=discord.com&utm_medium=social&utm_campaign=social-announcements&utm_content=textlink)" . PHP_EOL;
-		$content .= PHP_EOL;
-		if ( $reservations !== "" ) {
-			$content .= "🎟️ Reservierungen für diese Vorstellung sind unter [{$masked_reservations}]({$reservations}?utm_source=discord.com&utm_medium=social&utm_campaign=social-announcements&utm_content=textlink) möglich." . PHP_EOL;
-		}
-
-		$msg = Discord::message( $webhook_url );
-		$msg->setContent( mb_trim( $content ) );
-		$msg->setUsername( "Unikino GEGENLICHT" );
-		$msg->setAvatarUrl( get_site_icon_url() );
-		$msg->setUrl( "{$url}?utm_source=discord.com&utm_medium=social&utm_campaign=social-announcements&utm_content=textlink" );
-		$msg->setTitle( "{$title} " . ( $title !== $original_title ? "(OT: {$original_title})" : "" ) );
-		$msg->setImage($image_url);
-
-
-		send_discord_msg:
-		sleep(2);
-		$msg->send();
-	}
-}
 
 /**
  * @return WP_Post[]|int[]
