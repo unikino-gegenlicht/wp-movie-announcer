@@ -88,6 +88,7 @@ function wpma_publish_discord( array $posts ): void {
 		$msg->setAvatarUrl( get_site_icon_url() );
 		$msg->setUrl( "{$url}?utm_source=discord.com&utm_medium=social&utm_campaign=social-announcements&utm_content=textlink" );
 		$msg->setTitle( "{$title} " . ( $title !== $original_title ? "(OT: {$original_title})" : "" ) );
+		$msg->setDescription( wpma_get_description_str( $post ) );
 		$msg->setImage( $image_url );
 
 
