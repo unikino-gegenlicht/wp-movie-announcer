@@ -22,12 +22,16 @@
  * Update URI: https://github.com/unikino-gegenlicht/wp-studip-announcement-renderer/releases
  */
 
+const WPMA_OPTION_NAME = "wpma_settings";
+
+
+require_once "src/settings.php";
+
 use PhpChannels\DiscordWebhook\Discord;
 use Vazaha\Mastodon\Exceptions as MastodonExceptions;
 use Vazaha\Mastodon\Factories\ApiClientFactory as MastodonAPIFactory;
 use Vazaha\Mastodon\Helpers as MastodonHelper;
 
-const WPMA_OPTION_NAME = "wpma_settings";
 
 const WPMA_MASTODON_MAX_CHAR_COUNT  = 500;
 const WPMA_MASTODON_LINK_CHAR_COUNT = 23;
@@ -89,8 +93,6 @@ function wpma_enqueue_scripts() {
 		'publishNonce' => wp_create_nonce( "wpma_publish_manually" ),
 	] );
 }
-
-
 
 
 function wpma_publish_manually(): void {
@@ -384,11 +386,11 @@ function wpma_publish_discord( array $posts ): void {
 		$msg->setAvatarUrl( get_site_icon_url() );
 		$msg->setUrl( "{$url}?utm_source=discord.com&utm_medium=social&utm_campaign=social-announcements&utm_content=textlink" );
 		$msg->setTitle( "{$title} " . ( $title !== $original_title ? "(OT: {$original_title})" : "" ) );
-		$msg->setImage($image_url);
+		$msg->setImage( $image_url );
 
 
 		send_discord_msg:
-		sleep(2);
+		sleep( 2 );
 		$msg->send();
 	}
 }
