@@ -178,8 +178,8 @@ function wpma_get_description_str( WP_Post $post ): string {
 		};
 
 		$presentationLong = match ( $subtitleLanguage ) {
-			"zxx" => "{$audioLanguage} Original o. UT",
-			default => "{$audioLanguage} Original mit {$subtitleLanguage} UT"
+			"zxx" => "{$audioLanguage}. Original",
+			default => "{$audioLanguage}. Original mit {$subtitleLanguage}. UT"
 		};
 	} else {
 		$presentationTag = match ( $subtitleLanguage ) {
@@ -189,8 +189,8 @@ function wpma_get_description_str( WP_Post $post ): string {
 		};
 
 		$presentationLong = match ( $subtitleLanguage ) {
-			"zxx" => "{$audioLanguage} Synchronfassung o. UT",
-			default => "{$audioLanguage} Synchronfassung mit {$subtitleLanguage} UT"
+			"zxx" => "{$audioLanguage}. Synchronfassung",
+			default => "{$audioLanguage}. Synchronfassung mit {$subtitleLanguage}. UT"
 		};
 	}
 

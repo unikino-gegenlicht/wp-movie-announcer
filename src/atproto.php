@@ -93,7 +93,7 @@ function wpma_publish_at_proto( array $posts ): void {
 
 	foreach ( $screenings as $screening ) {
 		$wp_post   = get_post( $screening['id'] );
-		$post_text = "🎬 {$screening['title']}" . ( $screening['title'] !== $screening['original_title'] ? "(OT: {$screening['original_title']})" : "" ) . PHP_EOL;
+		$post_text = "{$screening['title']} " . ( $screening['title'] !== $screening['original_title'] ? "(OT: {$screening['original_title']})" : "" ) . PHP_EOL;
 		$post_text .= "{$screening['start']}" . PHP_EOL;
 		$post_text .= PHP_EOL;
 

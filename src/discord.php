@@ -74,6 +74,7 @@ function wpma_publish_discord( array $posts ): void {
 		}
 
 		$content = mb_trim( "## {$title} " . ( $title !== $original_title ? "(OT: {$original_title})" : "" ) ) . PHP_EOL;
+		$content .= ggl_get_starting_time($post)->format("d.m.Y | H:i \U\h\\r") . PHP_EOL . PHP_EOL;
 		$content .= mb_trim( strip_tags( str_replace( "</p>", PHP_EOL . PHP_EOL, $summary ) ) ) . PHP_EOL;
 		$content .= PHP_EOL;
 		$content .= "Und warum der Film aus der Sicht von {$author} für euch sehenswert ist erfahrt ihr unter [{$masked_url}]({$url}?utm_source=discord.com&utm_medium=social&utm_campaign=social-announcements&utm_content=textlink)" . PHP_EOL;
