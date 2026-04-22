@@ -22,10 +22,7 @@
  * Update URI: https://github.com/unikino-gegenlicht/wp-studip-announcement-renderer/releases
  */
 
-const WPMA_OPTION_NAME = "wpma_settings";
-
-
-require_once "src/settings.php";
+defined( 'ABSPATH' ) || exit;
 
 use PhpChannels\DiscordWebhook\Discord;
 use Vazaha\Mastodon\Exceptions as MastodonExceptions;
@@ -39,8 +36,9 @@ const WPMA_MASTODON_LINK_CHAR_COUNT = 23;
 
 const WPMA_ATPROTO_MAX_CHAR_COUNT = 300;
 
-defined( 'ABSPATH' ) || exit;
 require_once 'vendor/autoload.php';
+require_once "src/settings.php";
+require_once "src/wp-hooks.php";
 
 register_activation_hook( __FILE__, "wpma_activate" );
 register_deactivation_hook( __FILE__, "wpma_deactivate" );

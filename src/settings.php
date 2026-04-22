@@ -1,5 +1,8 @@
 <?php
 
+const WPMA_OPTION_NAME = "wpma_settings";
+
+
 /**
  * Register a new settings page in the backend
  *
