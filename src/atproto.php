@@ -74,6 +74,7 @@ function wpma_publish_atproto( array $posts ): void {
 			"summary"        => str_replace( "\n", "", mb_trim( strip_tags( nl2br( ggl_get_summary( $post->ID, $enforce_anonymized ) ) ) ) ),
 			"url"            => get_post_permalink( $post->ID ) . "?utm_source=bsky.app&utm_medium=social&utm_campaign=social-announcements&utm_content=textlink",
 			"image_path"     => $image_path,
+			"id"             => $post->ID,
 		];
 	}
 
@@ -91,6 +92,7 @@ function wpma_publish_atproto( array $posts ): void {
 	$last_uri = $api->createRecord( $opener )->getUri();
 
 	foreach ( $screenings as $screening ) {
+		$post = get_post( $screening['id'] );
 		$post_text = "🎬 {$screening['title']}" . ( $screening['title'] !== $screening['original_title'] ? "(OT: {$screening['original_title']})" : "" ) . PHP_EOL;
 		$post_text .= "{$screening['start']}" . PHP_EOL;
 		$post_text .= PHP_EOL;
@@ -108,8 +110,9 @@ function wpma_publish_atproto( array $posts ): void {
 		$post_text .= $post_closer;
 
 		$post = Post::create( $post_text, "de" );
-		$post_service->addFacetsFromLinks( $post );
-		$post_service->addReply( $post, $last_uri );
+		$post = $post_service->addFacetsFromLinks( $post );
+		$post = $post_service->addReply( $post, $last_uri );
+		$post = $post_service->addWebsiteCard( $post, $screening["url"], $screening["title"], wpma_get_description_str($post), $screening["image_path"] );
 
 		$last_uri = $api->createRecord( $post )->getUri();
 	}
