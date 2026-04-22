@@ -400,7 +400,7 @@ function wpma_publish_mastodon( array $posts ): void {
 
 	$screenings = array();
 	foreach ( $posts as $post ) {
-		$enforce_anonymized = ggl_get_licensing_type( $post->ID ) != "full";
+		$enforce_anonymized = ggl_get_licensing_type( $post->ID ) !== "full";
 		$image_path         = ggl_get_feature_image_path( $post->ID, "mobile", $enforce_anonymized );
 		$screenings[]       = [
 			"title"          => ggl_get_localized_title( $post->ID, $enforce_anonymized ),
