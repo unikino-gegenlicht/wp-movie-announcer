@@ -29,6 +29,11 @@ function wpma_test_mastodon(): void {
 			throw new ValueError( "No mastodon access token set.", 2 );
 		}
 
+		$visibility = rwmb_meta( "mastodon_post_visibility", [ "object_type" => "setting" ], WPMA_OPTION_NAME );
+		if ( mb_trim( $visibility ) === "" ) {
+			throw new ValueError( "No mastodon post visibility set.", 3 );
+		}
+
 		$factory = new MastodonAPIFactory();
 		$client  = $factory->build();
 
@@ -38,7 +43,7 @@ function wpma_test_mastodon(): void {
 		$full_image_path = dirname( __FILE__ ) . '/static/demo.jpg';
 		$post_image      = $client->methods()->media()->v2( file: new MastodonHelper\UploadFile( $full_image_path ), focus: "(0,0)" );
 
-		$client->methods()->statuses()->create( "This is a test post, to check the configuration of the announcement plugin. This post is only visible to you!", media_ids: [ $post_image->id ], visibility: "direct", language: "de" );
+		$client->methods()->statuses()->create( "This is a test post, to check the configuration of the announcement plugin. This post is only visible to you!", media_ids: [ $post_image->id ], visibility: $visibility, language: "de" );
 	} catch ( Exception $e ) {
 		wp_send_json_error( [ "error" => $e->getMessage() ] );
 	}
@@ -62,6 +67,10 @@ function wpma_publish_mastodon( array $posts ): void {
 	$access_token = rwmb_meta( "mastodon_access_token", [ "object_type" => "setting" ], WPMA_OPTION_NAME );
 	if ( mb_trim( $access_token ) === "" ) {
 		throw new ValueError( "No mastodon access token set.", 2 );
+	}
+	$visibility = rwmb_meta( "mastodon_post_visibility", [ "object_type" => "setting" ], WPMA_OPTION_NAME );
+	if ( mb_trim( $visibility ) === "" ) {
+		throw new ValueError( "No mastodon post visibility set.", 3 );
 	}
 
 	$factory = new MastodonAPIFactory();
@@ -96,7 +105,7 @@ function wpma_publish_mastodon( array $posts ): void {
 		$opener_text .= PHP_EOL;
 	}
 	$opener_text .= "Das gesamte Programm findet ihr wie immer unter https://gegenlicht.net?utm_source=mastodon.social&utm_medium=social&utm_campaign=social-announcements&utm_content=textlink";
-	$opener_post = $client->methods()->statuses()->create( $opener_text, visibility: "direct", language: "de" );
+	$opener_post = $client->methods()->statuses()->create( $opener_text, visibility: $visibility, language: "de" );
 
 	$last_post_id = $opener_post->id;
 	foreach ( $screenings as $screening ) {
@@ -126,7 +135,7 @@ function wpma_publish_mastodon( array $posts ): void {
 
 		$img = $client->methods()->media()->v2( new MastodonHelper\UploadFile( $screening["image_path"] ), focus: "(0,0)" );
 
-		$mstdn_post   = $client->methods()->statuses()->create( $post_text, media_ids: [ $img->id ], in_reply_to_id: $last_post_id, visibility: "direct", language: "de" );
+		$mstdn_post   = $client->methods()->statuses()->create( $post_text, media_ids: [ $img->id ], in_reply_to_id: $last_post_id, visibility: $visibility, language: "de" );
 		$last_post_id = $mstdn_post->id;
 	}
 }
