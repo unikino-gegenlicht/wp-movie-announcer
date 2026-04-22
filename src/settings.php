@@ -24,15 +24,15 @@ function wpma_register_settings_page( array $pages ): array {
 		"tabs"        => [
 			"mastodon" => [
 				"label" => __( "Mastodon", "wpma" ),
-				"icon"  => plugin_dir_url( __FILE__ ) . "static/mastodon.svg",
+				"icon"  => WPMA_STATIC_URL . "/mastodon.svg",
 			],
 			"at_proto" => [
 				"label" => __( "AT Proto / Bluesky", "wpma" ),
-				"icon"  => plugin_dir_url( __FILE__ ) . "static/bluesky.svg",
+				"icon"  => WPMA_STATIC_URL . "/bluesky.svg",
 			],
 			"discord"  => [
 				"label" => __( "Discord", "wpma" ),
-				"icon"  => plugin_dir_url( __FILE__ ) . "static/discord.svg",
+				"icon"  => WPMA_STATIC_URL . "/discord.svg",
 			]
 		]
 	);
