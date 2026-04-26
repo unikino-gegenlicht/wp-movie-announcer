@@ -17,7 +17,7 @@
  * License: EUPL-1.2
  * License URI: https://interoperable-europe.ec.europa.eu/sites/default/files/custom-page/attachment/2020-03/EUPL-1.2%20EN.txt
  * Text Domain: wpma
- * Version: GGL_PLUGIN_VERSION
+ * Version: 2.1.0
  * Required Plugins: ggl-post-types, meta-box-aio
  * Update URI: https://github.com/unikino-gegenlicht/wp-studip-announcement-renderer/releases
  */
@@ -135,8 +135,8 @@ function wpma_get_publishable_posts(): array {
 		error_log( "Invalid timezone set in wordpress, falling back to Europe/Berlin" );
 		$tz = new DateTimeZone( "Europe/Berlin" );
 	}
-	$next_week_start = new DateTimeImmutable( "next Sunday", $tz );
-	$next_week_end   = $next_week_start->add( new DateInterval( "P6D" ) );
+	$next_week_start = new DateTimeImmutable( "next Monday", $tz );
+	$next_week_end   = new DateTimeImmutable( "next Sunday", $tz );
 
 	$query = new WP_Query( [
 		'post_type'      => [ "movie", "event" ],

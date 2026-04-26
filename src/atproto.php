@@ -99,10 +99,10 @@ function wpma_publish_at_proto( array $posts ): void {
 
 		$base_length = strlen( $post_text );
 
-		$remaining_length = WPMA_ATPROTO_MAX_CHAR_COUNT - $base_length;
+		$remaining_length = WPMA_ATPROTO_MAX_CHAR_COUNT - $base_length - 5;
 		$summary          = substr_replace( $screening["summary"], "", $remaining_length );
 		$summary          = mb_trim( $summary );
-		$summary          .= str_ends_with( $summary, "." ) ? "" : "…";
+		$summary          .= str_ends_with( $summary, "." ) ? "" : "...";
 
 		$post_text .= $summary;
 
